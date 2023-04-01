@@ -37,7 +37,7 @@ func (a *App) Start(task gobenchmark.Task, bucket []float64, metrics ...*gobench
 		procs       int
 		duration    time.Duration
 	)
-	cmd.Flags().IntVarP(&concurrency, "concurrency", "n", 1, "concurrency per process")
+	cmd.Flags().IntVarP(&concurrency, "concurrency", "n", 1, "concurrency per process, the final concurrency num is concurrency * proc")
 	cmd.Flags().IntVarP(&procs, "proc", "p", 1, "process num")
 	cmd.Flags().DurationVarP(&duration, "duration", "d", 3*time.Second, "benchmark duration")
 
