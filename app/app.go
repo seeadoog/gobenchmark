@@ -29,7 +29,20 @@ func (a *App) Cmd() *cobra.Command {
 	return a.cmd
 }
 
-func (a *App) Start(task gobenchmark.Task, bucket []float64, metrics ...*gobenchmark.Histogram) {
+func (c *App) NewApp(name string) *App {
+	a := New(name)
+	c.cmd.AddCommand(a.cmd)
+	return a
+}
+
+func (c *App) Start() {
+	cmd := c.cmd
+	if err := cmd.Execute(); err != nil {
+		fmt.Println("exec cmd error=>", err)
+	}
+}
+
+func (a *App) SetTask(task gobenchmark.Task, bucket []float64, metrics ...*gobenchmark.Histogram) {
 
 	cmd := a.cmd
 	var (
@@ -98,9 +111,7 @@ func (a *App) Start(task gobenchmark.Task, bucket []float64, metrics ...*gobench
 		printTable(tm)
 
 	}
-	if err := cmd.Execute(); err != nil {
-		fmt.Println("exec cmd error=>", err)
-	}
+
 }
 
 type Metrics struct {
