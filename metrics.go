@@ -31,8 +31,8 @@ type HistogramMetric struct {
 	Max float64 `table:"max"`
 	Avg float64 `table:"avg"`
 
-	T9999 float64 `table:"t9999"`
-	T999  float64 `table:"t999"`
+	T9999 float64 //`table:"t9999"`
+	T999  float64 //`table:"t999"`
 	T99   float64 `table:"t99"`
 	T95   float64 `table:"t95"`
 	T90   float64 `table:"t90"`

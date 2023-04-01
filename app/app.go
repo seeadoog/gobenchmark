@@ -172,7 +172,8 @@ func printTable[T any](data []T) {
 	tlp := data[0]
 	tw := table.NewWriter(os.Stdout)
 	tw.SetAutoWrapText(true)
-	//tw.SetBorder(false)
+	tw.SetCenterSeparator("|")
+	tw.SetBorder(false)
 	headers := parseTableHeaders(reflect.TypeOf(tlp))
 	tw.SetHeader(headers)
 	for _, v := range data {
