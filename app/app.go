@@ -88,10 +88,10 @@ func (a *App) SetTask(task gobenchmark.Task, bucket []float64, metrics ...*goben
 			b := gobenchmark.NewBenchmark(gobenchmark.NewContext(a.ctx, duration), concurrency, bucket, task)
 			b.Start()
 			met := Metrics{
-				Metrics: append([]*gobenchmark.HistogramMetric{b.Metrics().Metrics()}),
+				Metrics: append([]*gobenchmark.HistogramMetric{b.Metrics().Metrics(time.Since(start).Seconds())}),
 			}
 			for _, metric := range metrics {
-				met.Metrics = append(met.Metrics, metric.Metrics())
+				met.Metrics = append(met.Metrics, metric.Metrics(time.Since(start).Seconds()))
 			}
 			return json.NewEncoder(os.Stdout).Encode(met)
 		})
@@ -149,6 +149,8 @@ func SumMetrics(m []*gobenchmark.HistogramMetric) *gobenchmark.HistogramMetric {
 		sumMetrics.Total += metric.Total
 
 		sumMetrics.Avg += metric.Avg
+
+		sumMetrics.Rps += metric.Rps
 
 		if metric.Max > sumMetrics.Max {
 			sumMetrics.Max = metric.Max

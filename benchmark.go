@@ -58,8 +58,8 @@ func (b *Benchmark) Start() {
 	b.wg.Wait()
 }
 
-func (b *Benchmark) String() string {
-	return b.defaultCost.Metrics().String()
+func (b *Benchmark) String(costSecond float64) string {
+	return b.defaultCost.Metrics(costSecond).String()
 }
 
 func (b *Benchmark) Metrics() *Histogram {

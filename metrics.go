@@ -24,12 +24,12 @@ type Histogram struct {
 }
 
 type HistogramMetric struct {
-	Name  string `table:"name"`
-	Unit  string `table:"unit"`
-	Total int    `table:"total"`
-
-	Max float64 `table:"max"`
-	Avg float64 `table:"avg"`
+	Name  string  `table:"name"`
+	Unit  string  `table:"unit"`
+	Total int     `table:"total"`
+	Rps   float64 `table:"rps"`
+	Max   float64 `table:"max"`
+	Avg   float64 `table:"avg"`
 
 	T9999 float64 //`table:"t9999"`
 	T999  float64 //`table:"t999"`
@@ -114,7 +114,7 @@ func (h *Histogram) Top(percent float64) float64 {
 	return h.bucket[len(h.bucket)-1].value
 }
 
-func (h *Histogram) Metrics() *HistogramMetric {
+func (h *Histogram) Metrics(costSecond float64) *HistogramMetric {
 	return &HistogramMetric{
 		Name:  h.name,
 		Max:   h.max,
@@ -127,6 +127,7 @@ func (h *Histogram) Metrics() *HistogramMetric {
 		T90:   h.Top(0.9),
 		T50:   h.Top(0.5),
 		Total: h.counts,
+		Rps:   float64(h.counts) / costSecond,
 	}
 }
 
