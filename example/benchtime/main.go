@@ -10,7 +10,8 @@ import (
 
 func main() {
 	myMetric := gobenchmark.NewHistogram("custom cost", gobenchmark.Uniform(0, 1000000000, 10000), "ns")
-	app.Start("benchtime", func(t context.Context, b *gobenchmark.Benchmark) (err error) {
+	a := app.New("benchtime")
+	a.Start(func(t context.Context, b *gobenchmark.Benchmark) (err error) {
 		st := time.Now()
 		time.Sleep(time.Duration(rand.Int()%1) * time.Millisecond)
 		myMetric.Add(float64(time.Since(st)))

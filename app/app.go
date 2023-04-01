@@ -15,10 +15,23 @@ import (
 	"time"
 )
 
-func Start(appName string, task gobenchmark.Task, bucket []float64, metrics ...*gobenchmark.Histogram) {
-	cmd := cobra.Command{
-		Use: appName,
+type App struct {
+	cmd *cobra.Command
+}
+
+func New(name string) *App {
+	return &App{
+		cmd: &cobra.Command{Use: name},
 	}
+}
+
+func (a *App) Cmd() *cobra.Command {
+	return a.cmd
+}
+
+func (a *App) Start(task gobenchmark.Task, bucket []float64, metrics ...*gobenchmark.Histogram) {
+
+	cmd := a.cmd
 	var (
 		concurrency int
 		procs       int
@@ -28,7 +41,7 @@ func Start(appName string, task gobenchmark.Task, bucket []float64, metrics ...*
 	cmd.Flags().IntVarP(&procs, "proc", "p", 1, "process num")
 	cmd.Flags().DurationVarP(&duration, "duration", "d", 3*time.Second, "benchmark duration")
 
-	cmd.Flags().Bool(fork.ForkFlag, false, "forked flag,mark process is sa children process .do not use it")
+	cmd.Flags().Bool(fork.ForkFlag, false, "forked flag,used to mark process  as children process .do not use it")
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		start := time.Now()
