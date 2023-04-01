@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"reflect"
+	"runtime"
 	"time"
 )
 
@@ -42,6 +43,7 @@ func Start(appName string, task gobenchmark.Task, bucket []float64, metrics ...*
 		err := pf.ForkProcess(func(f *fork.MasterTool) error {
 			return nil
 		}, func(c *fork.ChildrenTool) error {
+			runtime.GOMAXPROCS(1)
 			b := gobenchmark.NewBenchmark(gobenchmark.NewContext(context.TODO(), duration), concurrency, bucket, task)
 			b.Start()
 			met := Metrics{
