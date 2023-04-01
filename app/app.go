@@ -17,11 +17,20 @@ import (
 
 type App struct {
 	cmd *cobra.Command
+	ctx context.Context
 }
 
 func New(name string) *App {
 	return &App{
 		cmd: &cobra.Command{Use: name},
+		ctx: context.TODO(),
+	}
+}
+
+func NewWithContext(name string, ctx context.Context) *App {
+	return &App{
+		cmd: &cobra.Command{Use: name},
+		ctx: ctx,
 	}
 }
 
@@ -31,6 +40,12 @@ func (a *App) Cmd() *cobra.Command {
 
 func (c *App) NewApp(name string) *App {
 	a := New(name)
+	c.cmd.AddCommand(a.cmd)
+	return a
+}
+
+func (c *App) NewAppWithContext(name string, ctx context.Context) *App {
+	a := NewWithContext(name, ctx)
 	c.cmd.AddCommand(a.cmd)
 	return a
 }
@@ -70,7 +85,7 @@ func (a *App) SetTask(task gobenchmark.Task, bucket []float64, metrics ...*goben
 			return nil
 		}, func(c *fork.ChildrenTool) error {
 			runtime.GOMAXPROCS(1)
-			b := gobenchmark.NewBenchmark(gobenchmark.NewContext(context.TODO(), duration), concurrency, bucket, task)
+			b := gobenchmark.NewBenchmark(gobenchmark.NewContext(a.ctx, duration), concurrency, bucket, task)
 			b.Start()
 			met := Metrics{
 				Metrics: append([]*gobenchmark.HistogramMetric{b.Metrics().Metrics()}),
