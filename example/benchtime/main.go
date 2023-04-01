@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// main
 func main() {
 	myMetric := gobenchmark.NewHistogram("custom cost", gobenchmark.Uniform(0, 1000000000, 10000), "ns")
 	a := app.New("benchtime")
