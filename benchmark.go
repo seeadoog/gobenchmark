@@ -50,8 +50,9 @@ func (b *Benchmark) start() {
 					b.Fail.Add(1)
 					continue
 				}
-				b.Success.Add(1)
 				b.defaultCost.Add(float64(cost.Nanoseconds()) / float64(1e6))
+
+				b.Success.Add(1)
 			}
 		}()
 	}

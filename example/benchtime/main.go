@@ -43,6 +43,5 @@ func main() {
 		myMetric.Add(float64(time.Since(st).Nanoseconds() / 1000))
 		return nil
 	}, gobenchmark.Uniform(0, 1000000, 10000), myMetric)
-
 	a.Start()
 }

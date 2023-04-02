@@ -133,22 +133,24 @@ func (h *Histogram) Metrics(costSecond float64, success float64) *HistogramMetri
 		T90:    h.Top(0.9),
 		T50:    h.Top(0.5),
 		Total:  h.counts,
-		Rps:    float64(h.counts) / costSecond,
 		StdDev: h.stdDev(),
 	}
 
 	if h.counts != 0 {
 		m.Avg = h.sum / float64(h.counts)
 	}
+	if costSecond > 0 {
+		m.Rps = float64(h.counts) / costSecond
+	}
 	return m
 }
 
 func (h *HistogramMetric) String() string {
-	return fmt.Sprintf("%s max:%.2f%v avg:%.2f%v t99:%.2f%v t95:%.2f%v t90:%.2f%v   counts:%v", h.Name, h.Max, h.Unit, h.Avg, h.Unit, h.T99, h.Unit, h.T90, h.Unit, h.T50, h.Unit, h.Total)
+	return fmt.Sprintf("%s max:%.2f%v avg:%.2f%v t99:%.2f%v t95:%.2f%v t90:%.2f%v counts:%v stddev:%.2f", h.Name, h.Max, h.Unit, h.Avg, h.Unit, h.T99, h.Unit, h.T90, h.Unit, h.T50, h.Unit, h.Total, h.StdDev)
 }
 
 func (h *Histogram) stdDev() float64 {
-	if h.counts == 0 {
+	if h.counts == 0 || len(h.bucket) == 0 {
 		return 0
 	}
 	avg := h.sum / float64(h.counts)
@@ -158,6 +160,9 @@ func (h *Histogram) stdDev() float64 {
 	for _, b := range h.bucket {
 		sum += float64(b.num) * math.Abs(b.value-avg) * math.Abs(b.value-avg)
 		total += float64(b.num)
+	}
+	if total == 0 {
+		return 0
 	}
 	return math.Sqrt(sum / total)
 }

@@ -106,7 +106,7 @@ func (a *App) SetTask(task gobenchmark.Task, bucket []float64, metrics ...*goben
 
 	cmd.Flags().Bool(fork.ForkFlag, false, "forked flag,used to mark process  as children process .do not use it")
 
-	cmd.Flags().Int64VarP(&count, "count", "c", math.MaxInt64, "run times ,default max int64 value")
+	cmd.Flags().Int64VarP(&count, "count", "c", math.MaxInt64, "run times per process ,default max int64 value")
 
 	cmd.Flags().StringSliceVar(&a.IgnoreHeaders, "ignore-h", a.IgnoreHeaders, "ignore Headers in metrics table")
 	cmd.Run = func(cmd *cobra.Command, args []string) {
@@ -132,8 +132,9 @@ func (a *App) SetTask(task gobenchmark.Task, bucket []float64, metrics ...*goben
 			runtime.GOMAXPROCS(1)
 			ctx, counter := gobenchmark.NewCounterContext(gobenchmark.NewContext(a.ctx, duration), count)
 			b := gobenchmark.NewBenchmark(ctx, concurrency, bucket, func(t context.Context, b *gobenchmark.Benchmark) (err error) {
+				err = task(t, b)
 				counter.Add(1)
-				return task(t, b)
+				return err
 			})
 			b.Start()
 			met := Metrics{
@@ -142,7 +143,12 @@ func (a *App) SetTask(task gobenchmark.Task, bucket []float64, metrics ...*goben
 			for _, metric := range metrics {
 				met.Metrics = append(met.Metrics, metric.Metrics(time.Since(start).Seconds(), b.SuccessRate()))
 			}
-			return json.NewEncoder(os.Stdout).Encode(met)
+			err := json.NewEncoder(os.Stdout).Encode(met)
+			if err != nil {
+				b.Println("err json:", met)
+				return err
+			}
+			return err
 		})
 		if err != nil {
 			panic(err)
