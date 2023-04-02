@@ -3,6 +3,7 @@ package gobenchmark
 import (
 	"context"
 	"fmt"
+	"math"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -17,6 +18,8 @@ type Benchmark struct {
 	defaultCost *Histogram
 	Success     atomic.Int64
 	Fail        atomic.Int64
+	count       atomic.Int64
+	Total       int64
 }
 
 func NewBenchmark(ctx context.Context, concurrency int, costBucket []float64, task Task) *Benchmark {
@@ -30,6 +33,9 @@ func NewBenchmark(ctx context.Context, concurrency int, costBucket []float64, ta
 }
 
 func (b *Benchmark) start() {
+	if b.Total == 0 {
+		b.Total = math.MaxInt64
+	}
 	for i := 0; i < b.concurrency; i++ {
 		b.wg.Add(1)
 		go func() {
@@ -39,7 +45,9 @@ func (b *Benchmark) start() {
 				case <-b.ctx.Done():
 					return
 				default:
-
+				}
+				if b.count.Add(1) > b.Total {
+					return
 				}
 				startTime := time.Now()
 				err := b.task(b.ctx, b)
@@ -50,9 +58,11 @@ func (b *Benchmark) start() {
 					b.Fail.Add(1)
 					continue
 				}
+
 				b.defaultCost.Add(float64(cost.Nanoseconds()) / float64(1e6))
 
 				b.Success.Add(1)
+
 			}
 		}()
 	}

@@ -130,12 +130,9 @@ func (a *App) SetTask(task gobenchmark.Task, bucket []float64, metrics ...*goben
 			return nil
 		}, func(c *fork.ChildrenTool) error {
 			runtime.GOMAXPROCS(1)
-			ctx, counter := gobenchmark.NewCounterContext(gobenchmark.NewContext(a.ctx, duration), count)
-			b := gobenchmark.NewBenchmark(ctx, concurrency, bucket, func(t context.Context, b *gobenchmark.Benchmark) (err error) {
-				err = task(t, b)
-				counter.Add(1)
-				return err
-			})
+
+			b := gobenchmark.NewBenchmark(gobenchmark.NewContext(a.ctx, duration), concurrency, bucket, task)
+			b.Total = count
 			b.Start()
 			met := Metrics{
 				Metrics: append([]*gobenchmark.HistogramMetric{b.Metrics().Metrics(time.Since(start).Seconds(), b.SuccessRate())}),
