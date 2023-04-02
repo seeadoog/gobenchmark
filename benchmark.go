@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -14,6 +15,8 @@ type Benchmark struct {
 	ctx         context.Context
 	wg          sync.WaitGroup
 	defaultCost *Histogram
+	Success     atomic.Int64
+	Fail        atomic.Int64
 }
 
 func NewBenchmark(ctx context.Context, concurrency int, costBucket []float64, task Task) *Benchmark {
@@ -22,7 +25,7 @@ func NewBenchmark(ctx context.Context, concurrency int, costBucket []float64, ta
 		task:        task,
 		ctx:         ctx,
 		wg:          sync.WaitGroup{},
-		defaultCost: NewHistogram("cost", costBucket, "us"),
+		defaultCost: NewHistogram("cost", costBucket, "ms"),
 	}
 }
 
@@ -44,10 +47,11 @@ func (b *Benchmark) start() {
 				if err != nil {
 					b.Println("error=>", err)
 					time.Sleep(1 * time.Second)
+					b.Fail.Add(1)
 					continue
 				}
-
-				b.defaultCost.Add(float64(cost.Nanoseconds() / 1e3))
+				b.Success.Add(1)
+				b.defaultCost.Add(float64(cost.Nanoseconds()) / float64(1e6))
 			}
 		}()
 	}
@@ -58,8 +62,8 @@ func (b *Benchmark) Start() {
 	b.wg.Wait()
 }
 
-func (b *Benchmark) String(costSecond float64) string {
-	return b.defaultCost.Metrics(costSecond).String()
+func (b *Benchmark) String(costSecond float64, success float64) string {
+	return b.defaultCost.Metrics(costSecond, success).String()
 }
 
 func (b *Benchmark) Metrics() *Histogram {
@@ -70,9 +74,13 @@ func (b *Benchmark) Println(args ...any) {
 	fmt.Fprintln(os.Stderr, args...)
 }
 
+func (b *Benchmark) SuccessRate() float64 {
+	return float64(b.Success.Load()) / float64(b.Success.Load()+b.Fail.Load())
+}
+
 type Metric interface {
 	Value() float64
 	Name() string
 }
 
-type Task func(t context.Context, b *Benchmark) (err error)
+type Task func(ctx context.Context, b *Benchmark) (err error)

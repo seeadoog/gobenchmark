@@ -16,7 +16,7 @@ func TestNewBenchmark(t *testing.T) {
 	})
 	b.Start()
 
-	fmt.Println(b.String(3))
+	fmt.Println(b.String(3, 1))
 }
 
 func TestSearch(t *testing.T) {
@@ -26,4 +26,8 @@ func TestSearch(t *testing.T) {
 		return a[i] >= -1
 	})
 	fmt.Println(a[i])
+}
+
+func TestF(t *testing.T) {
+	fmt.Printf("%.6f", 1.0/1e5)
 }

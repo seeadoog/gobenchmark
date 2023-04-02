@@ -2,6 +2,7 @@ package gobenchmark
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"sync"
 )
@@ -31,12 +32,15 @@ type HistogramMetric struct {
 	Max   float64 `table:"max"`
 	Avg   float64 `table:"avg"`
 
-	T9999 float64 //`table:"t9999"`
-	T999  float64 //`table:"t999"`
+	T9999 float64 `table:"t9999"`
+	T999  float64 `table:"t999"`
 	T99   float64 `table:"t99"`
 	T95   float64 `table:"t95"`
 	T90   float64 `table:"t90"`
 	T50   float64 `table:"t50"`
+
+	StdDev      float64 `table:"stddev"`
+	SuccessRate float64 `table:"success"`
 }
 
 func NewHistogram(name string, rawBuckets []float64, unit string) *Histogram {
@@ -114,23 +118,46 @@ func (h *Histogram) Top(percent float64) float64 {
 	return h.bucket[len(h.bucket)-1].value
 }
 
-func (h *Histogram) Metrics(costSecond float64) *HistogramMetric {
-	return &HistogramMetric{
-		Name:  h.name,
-		Max:   h.max,
-		Unit:  h.unit,
-		Avg:   h.sum / float64(h.counts),
-		T9999: h.Top(0.9999),
-		T999:  h.Top(0.999),
-		T99:   h.Top(0.99),
-		T95:   h.Top(0.95),
-		T90:   h.Top(0.9),
-		T50:   h.Top(0.5),
-		Total: h.counts,
-		Rps:   float64(h.counts) / costSecond,
+func (h *Histogram) Metrics(costSecond float64, success float64) *HistogramMetric {
+	m := &HistogramMetric{
+		Name:        h.name,
+		SuccessRate: success,
+
+		Max:  h.max,
+		Unit: h.unit,
+		//Avg:    h.sum / float64(h.counts),
+		T9999:  h.Top(0.9999),
+		T999:   h.Top(0.999),
+		T99:    h.Top(0.99),
+		T95:    h.Top(0.95),
+		T90:    h.Top(0.9),
+		T50:    h.Top(0.5),
+		Total:  h.counts,
+		Rps:    float64(h.counts) / costSecond,
+		StdDev: h.stdDev(),
 	}
+
+	if h.counts != 0 {
+		m.Avg = h.sum / float64(h.counts)
+	}
+	return m
 }
 
 func (h *HistogramMetric) String() string {
 	return fmt.Sprintf("%s max:%.2f%v avg:%.2f%v t99:%.2f%v t95:%.2f%v t90:%.2f%v   counts:%v", h.Name, h.Max, h.Unit, h.Avg, h.Unit, h.T99, h.Unit, h.T90, h.Unit, h.T50, h.Unit, h.Total)
+}
+
+func (h *Histogram) stdDev() float64 {
+	if h.counts == 0 {
+		return 0
+	}
+	avg := h.sum / float64(h.counts)
+
+	sum := 0.0
+	total := 0.0
+	for _, b := range h.bucket {
+		sum += float64(b.num) * math.Abs(b.value-avg) * math.Abs(b.value-avg)
+		total += float64(b.num)
+	}
+	return math.Sqrt(sum / total)
 }
