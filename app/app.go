@@ -169,7 +169,11 @@ func (a *App) SetTask(task gobenchmark.Task, bucket []float64, metrics ...*goben
 				sumMetrics[i] = append(sumMetrics[i], histogramMetric)
 			}
 		}
-		for _, metric := range sumMetrics {
+		for id, metric := range sumMetrics {
+			if len(metric) == 0 {
+				fmt.Println("nil metric idx:", id)
+				continue
+			}
 			tm = append(tm, SumMetrics(metric))
 			//fmt.Println(SumMetrics(metric).String())
 		}
@@ -185,7 +189,9 @@ type Metrics struct {
 }
 
 func SumMetrics(m []*gobenchmark.HistogramMetric) *gobenchmark.HistogramMetric {
+	if len(m) == 0 {
 
+	}
 	sumMetrics := &gobenchmark.HistogramMetric{Name: m[0].Name, Unit: m[0].Unit}
 	for _, metric := range m {
 

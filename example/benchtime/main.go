@@ -22,18 +22,19 @@ func main() {
 	//	counter = cc
 	//	bentime.SetContext(ctx)
 	//}
-
+	m1 := gobenchmark.NewHistogram("11", gobenchmark.DefaultBuckets, "ms")
 	bentime.SetTask(func(t context.Context, b *gobenchmark.Benchmark) (err error) {
 		//st := time.Now()
 		math.Sqrt(1.3)
 		//myMetric.Add(float64(time.Since(st).Nanoseconds() / 1000))
-		tm := time.NewTimer(10 * time.Millisecond)
+		tm := time.NewTimer(4 * time.Second)
 		select {
-		case <-t.Done():
+		//case <-t.Done():
 		case <-tm.C:
 		}
+		m1.Add(1)
 		return nil
-	}, gobenchmark.DefaultBuckets)
+	}, gobenchmark.DefaultBuckets, m1)
 
 	benchCost := a.NewApp("cost")
 
