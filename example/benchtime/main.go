@@ -5,7 +5,6 @@ import (
 	"github.com/seeadoog/gobenchmark"
 	"github.com/seeadoog/gobenchmark/app"
 	"math"
-	"math/rand"
 	"time"
 )
 
@@ -32,16 +31,15 @@ func main() {
 		//case <-t.Done():
 		case <-tm.C:
 		}
+
 		m1.Add(1)
 		return nil
 	}, gobenchmark.DefaultBuckets, m1)
 
 	benchCost := a.NewApp("cost")
-
+	benchCost.GoMaxProc = 1
 	benchCost.SetTask(func(t context.Context, b *gobenchmark.Benchmark) (err error) {
-		st := time.Now()
-		time.Sleep(time.Duration(rand.Int()%1) * time.Millisecond)
-		myMetric.Add(float64(time.Since(st).Nanoseconds() / 1000))
+
 		return nil
 	}, gobenchmark.Uniform(0, 1000000, 10000), myMetric)
 	a.Start()

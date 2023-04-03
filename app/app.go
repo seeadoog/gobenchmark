@@ -25,6 +25,7 @@ type App struct {
 	Proc          int
 	Duration      time.Duration
 	IgnoreHeaders []string
+	GoMaxProc     int
 }
 
 func New(name string) *App {
@@ -89,6 +90,9 @@ func (a *App) init() {
 		a.Duration = 3 * time.Second
 	}
 
+	if a.GoMaxProc <= 0 {
+		a.GoMaxProc = 1
+	}
 }
 
 func (a *App) SetTask(task gobenchmark.Task, bucket []float64, metrics ...*gobenchmark.Histogram) {
@@ -109,6 +113,8 @@ func (a *App) SetTask(task gobenchmark.Task, bucket []float64, metrics ...*goben
 	cmd.Flags().Int64VarP(&count, "count", "c", math.MaxInt64, "run times per process ,default max int64 value")
 
 	cmd.Flags().StringSliceVar(&a.IgnoreHeaders, "ignore-h", a.IgnoreHeaders, "ignore Headers in metrics table")
+
+	cmd.Flags().IntVar(&a.GoMaxProc, "go-max-proc", a.GoMaxProc, "go max procs for children")
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if len(a.IgnoreHeaders) == 0 {
 			a.IgnoreHeaders = defaultDisableMetricsHeaders
@@ -129,7 +135,7 @@ func (a *App) SetTask(task gobenchmark.Task, bucket []float64, metrics ...*goben
 		err := pf.ForkProcess(func(f *fork.MasterTool) error {
 			return nil
 		}, func(c *fork.ChildrenTool) error {
-			runtime.GOMAXPROCS(1)
+			runtime.GOMAXPROCS(a.GoMaxProc)
 
 			b := gobenchmark.NewBenchmark(gobenchmark.NewContext(a.ctx, duration), concurrency, bucket, task)
 			b.Total = count
