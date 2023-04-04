@@ -22,6 +22,7 @@ type Histogram struct {
 	sum    float64
 	max    float64
 	unit   string
+	min    float64
 }
 
 type HistogramMetric struct {
@@ -31,6 +32,7 @@ type HistogramMetric struct {
 	Rps   float64 `table:"rps"`
 	Max   float64 `table:"max"`
 	Avg   float64 `table:"avg"`
+	Min   float64 `table:"min"`
 
 	T9999 float64 `table:"t9999"`
 	T999  float64 `table:"t999"`
@@ -68,16 +70,21 @@ func NewHistogram(name string, rawBuckets []float64, unit string) *Histogram {
 		sum:    0,
 		max:    0,
 		unit:   unit,
+		min:    math.MaxFloat64,
 	}
 }
 
 // 1/3/5/8/9
 func (h *Histogram) Add(data float64) {
 	h.lock.Lock()
-	h.lock.Unlock()
+	defer h.lock.Unlock()
 	if h.max < data {
 		h.max = data
 	}
+	if h.min > data {
+		h.min = data
+	}
+
 	i := sort.Search(len(h.bucket), func(i int) bool {
 		return h.bucket[i].value >= data
 	})
@@ -134,6 +141,7 @@ func (h *Histogram) Metrics(costSecond float64, success float64) *HistogramMetri
 		T50:    h.Top(0.5),
 		Total:  h.counts,
 		StdDev: h.stdDev(),
+		Min:    h.min,
 	}
 
 	if h.counts != 0 {

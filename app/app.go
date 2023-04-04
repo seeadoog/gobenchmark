@@ -5,16 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	table "github.com/olekukonko/tablewriter"
-	"github.com/seeadoog/fork"
-	"github.com/seeadoog/gobenchmark"
-	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 	"math"
 	"os"
 	"reflect"
 	"runtime"
 	"time"
+
+	table "github.com/olekukonko/tablewriter"
+	"github.com/seeadoog/fork"
+	"github.com/seeadoog/gobenchmark"
+	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 )
 
 type App struct {
@@ -198,7 +199,7 @@ func SumMetrics(m []*gobenchmark.HistogramMetric) *gobenchmark.HistogramMetric {
 	if len(m) == 0 {
 
 	}
-	sumMetrics := &gobenchmark.HistogramMetric{Name: m[0].Name, Unit: m[0].Unit}
+	sumMetrics := &gobenchmark.HistogramMetric{Name: m[0].Name, Unit: m[0].Unit, Min: math.MaxFloat64}
 	for _, metric := range m {
 
 		//fmt.Println(metric.String())
@@ -220,6 +221,9 @@ func SumMetrics(m []*gobenchmark.HistogramMetric) *gobenchmark.HistogramMetric {
 		}
 		sumMetrics.StdDev += metric.StdDev
 		sumMetrics.SuccessRate += metric.SuccessRate
+		if metric.Min < sumMetrics.Min {
+			sumMetrics.Min = metric.Min
+		}
 	}
 	n := float64(len(m))
 	sumMetrics.T50 /= n

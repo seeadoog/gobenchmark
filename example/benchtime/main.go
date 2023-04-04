@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/seeadoog/gobenchmark"
-	"github.com/seeadoog/gobenchmark/app"
 	"math"
 	"time"
+
+	"github.com/seeadoog/gobenchmark"
+	"github.com/seeadoog/gobenchmark/app"
 )
 
 // main
@@ -23,16 +24,16 @@ func main() {
 	//}
 	m1 := gobenchmark.NewHistogram("11", gobenchmark.DefaultBuckets, "ms")
 	bentime.SetTask(func(t context.Context, b *gobenchmark.Benchmark) (err error) {
-		//st := time.Now()
+		st := time.Now()
 		math.Sqrt(1.3)
 		//myMetric.Add(float64(time.Since(st).Nanoseconds() / 1000))
-		tm := time.NewTimer(4 * time.Second)
+		tm := time.NewTimer(300 * time.Millisecond)
 		select {
 		//case <-t.Done():
 		case <-tm.C:
 		}
 
-		m1.Add(1)
+		m1.Add(float64(time.Since(st)) / 1e6)
 		return nil
 	}, gobenchmark.DefaultBuckets, m1)
 
